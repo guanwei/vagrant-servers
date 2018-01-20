@@ -1,0 +1,1 @@
+vagrant up centos7 --provision

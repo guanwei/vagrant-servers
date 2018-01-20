@@ -1,0 +1,1 @@
+vagrant up ubuntu16 --provision

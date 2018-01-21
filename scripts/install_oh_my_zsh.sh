@@ -13,9 +13,14 @@ install_oh_my_zsh()
     echo 'DISABLE_UPDATE_PROMPT=true' >> ~/.zshrc
 
   ## install powerline fonts
-  git clone https://github.com/powerline/fonts.git --depth=1
-  ./fonts/install.sh
-  rm -rf fonts
+  font_dir="$HOME/.local/share/fonts"
+  if [[ ! -d $font_dir ]]; then
+    git clone https://github.com/powerline/fonts.git --depth=1
+    ./fonts/install.sh
+    rm -rf fonts
+  else
+    echo "powerline fonts already installed"
+  fi
 }
 
 if [[ -r /etc/os-release ]]; then

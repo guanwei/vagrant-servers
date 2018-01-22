@@ -3,7 +3,7 @@
 convert_dos2unix()
 {
   DIR=${1:-.}
-  find $DIR -type f -print0 | xargs -0 -n 1 -P 4 dos2unix
+  find $DIR -regex '.*\.sh' -type f -print0 | xargs -0 -n 1 -P 4 dos2unix
 }
 
 if [[ -r /etc/os-release ]]; then

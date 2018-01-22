@@ -3,7 +3,7 @@
 install_mysql_on_centos()
 {
   if ! $(yum repolist enabled | grep -q "mysql.*-community.*"); then
-    yum install https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm || exit 1
+    yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm || exit 1
   fi
 
   if ! $(rpm -qa | grep -q "mysql-community-server"); then

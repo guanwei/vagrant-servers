@@ -27,6 +27,15 @@ Vagrant.configure("2") do |config|
 
   config.vm.box_check_update = false
   config.vbguest.auto_update = false
+  config.ssh.forward_x11 = true
+
+  config.vm.provision "shell" do |s|
+    ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+    s.inline = <<-SHELL
+      mkdir -p /root/.ssh
+      echo #{ssh_pub_key} > /root/.ssh/authorized_keys
+    SHELL
+  end
 
   config.vm.provision "docker" do |d|
     d.post_install_provision "shell", path: "scripts/setup_docker.sh"
@@ -35,8 +44,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", path: "scripts/install_oh_my_zsh.sh"
   config.vm.provision "shell", path: "scripts/convert_dos2unix.sh"
 
-  config.vm.define "ubuntu16" do |host|
-    host.vm.box = "ubuntu/xenial64"
+  config.vm.define "ubuntu16", autostart: false do |host|
+    host.vm.box = "bento/ubuntu-16.04"
     host.vm.hostname = "ubuntu16"
     host.vm.network "private_network", ip: "192.168.33.10"
     host.vm.provider "virtualbox" do |vb|
@@ -51,8 +60,8 @@ Vagrant.configure("2") do |config|
     SHELL
   end
 
-  config.vm.define "centos7" do |host|
-    host.vm.box = "centos/7"
+  config.vm.define "centos7", autostart: false do |host|
+    host.vm.box = "bento/centos-7"
     host.vm.hostname = "centos7"
     host.vm.network "private_network", ip: "192.168.33.11"
     host.vm.provider "virtualbox" do |vb|
@@ -65,7 +74,7 @@ Vagrant.configure("2") do |config|
     SHELL
   end
   
-  config.vm.define "rhel7" do |host|
+  config.vm.define "rhel7", autostart: false do |host|
     host.vm.box = "generic/rhel7"
     host.vm.hostname = "rhel7"
     host.vm.network "private_network", ip: "192.168.33.12"

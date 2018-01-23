@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 convert_dos2unix()
 {
@@ -6,9 +7,9 @@ convert_dos2unix()
   find $DIR -regex '.*\.sh' -type f -print0 | xargs -0 -n 1 -P 4 dos2unix
 }
 
-if [[ -r /etc/os-release ]]; then
-  . /etc/os-release
-  case $ID in
+if [ -r /etc/os-release ]; then
+  lsb_dist=$(. /etc/os-release && echo "$ID")
+  case $lsb_dist in
     ubuntu)
       apt install -y dos2unix
       convert_dos2unix /vagrant

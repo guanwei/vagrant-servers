@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 install_oh_my_zsh()
 {
@@ -14,7 +15,7 @@ install_oh_my_zsh()
 
   ## install powerline fonts
   font_dir="$HOME/.local/share/fonts"
-  if [[ ! -d $font_dir ]]; then
+  if [ ! -d $font_dir ]; then
     git clone https://github.com/powerline/fonts.git --depth=1
     ./fonts/install.sh
     rm -rf fonts
@@ -23,9 +24,9 @@ install_oh_my_zsh()
   fi
 }
 
-if [[ -r /etc/os-release ]]; then
-  . /etc/os-release
-  case $ID in
+if [ -r /etc/os-release ]; then
+  lsb_dist=$(. /etc/os-release && echo "$ID")
+  case $lsb_dist in
     ubuntu)
       apt-get install -y zsh git
       install_oh_my_zsh

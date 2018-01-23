@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
+set -e
 
 install_mysql_on_centos()
 {
-  if ! $(yum repolist enabled | grep -q "mysql.*-community.*"); then
-    yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm || exit 1
+  if [ ! $(yum repolist enabled | grep -q "mysql.*-community.*") ]; then
+    yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
   fi
 
-  if ! $(rpm -qa | grep -q "mysql-community-server"); then
+  if [ ! $(rpm -qa | grep -q "mysql-community-server") ]; then
     rm -f /var/log/mysqld.log
-    yum install -y mysql-community-server && systemctl restart mysqld || exit 1
+    yum install -y mysql-community-server
+    systemctl restart mysqld
 
     ## optimize mysql configuration
     echo "optimizing mysql configuration..."
@@ -29,14 +31,15 @@ install_mysql_on_centos()
     grep -q '^\[mysql\]' /etc/my.cnf || echo -e '\n[mysql]' >> /etc/my.cnf
     grep -q '^prompt=' /etc/my.cnf ||
       sed -i '/\[mysql\]/a\prompt=\\\\u@\\\\h [\\\\d]>\\\\_' /etc/my.cnf
-    systemctl restart mysqld && echo "optimizing is done" || exit 1
+    systemctl restart mysqld
+    echo "optimizing is done"
 
     OLD_PWD=$(grep 'A temporary password' /var/log/mysqld.log | awk '{print $NF}')
-    if [[ -n $OLD_PWD ]]; then
+    if [ -n $OLD_PWD ]; then
       echo "mysql root temporary password is $OLD_PWD"
       NEW_PWD=${1:-mysql}
-      mysqladmin -uroot -p$OLD_PWD password "$NEW_PWD" &&
-        echo "changed mysql root password to $NEW_PWD"
+      mysqladmin -uroot -p$OLD_PWD password "$NEW_PWD"
+      echo "changed mysql root password to $NEW_PWD"
     else
       echo "mysql root temporary password not found"
     fi
@@ -46,9 +49,9 @@ install_mysql_on_centos()
   fi
 }
 
-if [[ -r /etc/os-release ]]; then
-  . /etc/os-release
-  case $ID in
+if [ -r /etc/os-release ]; then
+  lsb_dist=$(. /etc/os-release && echo "$ID")
+  case $lsb_dist in
     ubuntu)
       ;;
     centos)

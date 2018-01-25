@@ -51,11 +51,6 @@ Vagrant.configure("2") do |config|
       vb.cpus = "1"
       vb.memory = "1024"
     end
-    host.vm.provision "shell", inline: <<-SHELL
-      apt-get update
-      apt-get upgrade -y
-      apt-get autoremove -y
-    SHELL
   end
 
   config.vm.define "centos7", autostart: false do |host|
@@ -67,9 +62,6 @@ Vagrant.configure("2") do |config|
       vb.cpus = "1"
       vb.memory = "1024"
     end
-    host.vm.provision "shell", inline: <<-SHELL
-      yum update -y
-    SHELL
   end
   
   config.vm.define "rhel7", autostart: false do |host|
@@ -81,8 +73,5 @@ Vagrant.configure("2") do |config|
       vb.cpus = "1"
       vb.memory = "1024"
     end
-    host.vm.provision "shell", inline: <<-SHELL
-      yum update -y
-    SHELL
   end
 end

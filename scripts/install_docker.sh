@@ -14,11 +14,12 @@ install_docker()
 setup_docker()
 {
   ## add user 'vagrant' to group 'docker'
-  usermod -aG docker vagrant
+  #use 'usermod -aG docker vagrant' will not give your prompt
+  gpasswd -a vagrant docker
 
   ## set docker registry mirrors
   mkdir -p /etc/docker
-  cat > /etc/docker/daemon.json <<-EOF
+  tee > /etc/docker/daemon.json <<-EOF
 {
   "registry-mirrors": [
     "https://registry.docker-cn.com"

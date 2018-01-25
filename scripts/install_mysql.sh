@@ -1,69 +1,66 @@
 #!/usr/bin/env bash
 set -e
 
-install_mysql_on_ubuntu()
+optimize_mysql_configuration()
 {
-  # Install MySQL Server in a Non-Interactive mode. Default root password will be "root"
-  PWD=${1:-mysql}
-  echo "mysql-server-5.7 mysql-server/root_password password $PWD" | debconf-set-selections
-  echo "mysql-server-5.7 mysql-server/root_password_again password $PWD" | debconf-set-selections
-  apt-get install -y mysql-server-5.7
-  echo "mysql root password is $PWD"
+  CONF_FILE=${1:-/etc/my.cnf}
 
   ## optimize mysql configuration
   echo "optimizing mysql configuration..."
-  grep -q '^\[mysqld\]' /etc/mysql/my.cnf || printf '\n[mysqld]\n' >> /etc/mysql/my.cnf
-  grep -q '^explicit_defaults_for_timestamp=' /etc/mysql/my.cnf ||
-    sed -i '/\[mysqld\]/a\explicit_defaults_for_timestamp=true' /etc/mysql/my.cnf
-  grep -q '^log-bin=' /etc/mysql/my.cnf || (
-    mkdir -p /var/log/mysql
-    chown -R mysql:mysql /var/log/mysql
-    sed -i '/\[mysqld\]/a\log-bin=/var/log/mysql/mysql-bin.log' /etc/mysql/my.cnf
+  grep -q '^\[mysqld\]' $CONF_FILE || printf '\n[mysqld]\n' >> $CONF_FILE
+  grep -q '^validate_password_policy=' $CONF_FILE &&
+    sed -i 's/^validate_password_policy=.*/validate_password_policy=LOW/g' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\validate_password_policy=LOW' $CONF_FILE
+  grep -q '^plugin-load-add=validate_password.so' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\plugin-load-add=validate_password.so' $CONF_FILE
+  grep -q '^explicit_defaults_for_timestamp=' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\explicit_defaults_for_timestamp=true' $CONF_FILE
+  grep -q '^log-bin=' $CONF_FILE || (
+    mkdir -p /var/log/mysql && chown -R mysql:mysql $CONF_FILE
+    sed -i '/\[mysqld\]/a\log-bin=/var/log/mysql/mysql-bin.log' $CONF_FILE
   )
-  grep -q '^server-id=' /etc/mysql/my.cnf ||
-    sed -i '/\[mysqld\]/a\server-id=1' /etc/mysql/my.cnf
-  grep -q '^\[mysql\]' /etc/mysql/my.cnf || printf '\n[mysql]\n' >> /etc/mysql/my.cnf
-  grep -q '^prompt=' /etc/mysql/my.cnf ||
-    sed -i '/\[mysql\]/a\prompt=\\\\u@\\\\h [\\\\d]>\\\\_' /etc/mysql/my.cnf
-  systemctl restart mysql
-  echo "optimizing is done"
+  grep -q '^max_binlog_size=' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\max_binlog_size=100M' $CONF_FILE
+  grep -q '^expire_logs_days=' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\expire_logs_days=10' $CONF_FILE
+  grep -q '^server-id=' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\server-id=1' $CONF_FILE
+  grep -q '^\[mysql\]' $CONF_FILE || printf '\n[mysql]\n' >> $CONF_FILE
+  grep -q '^prompt=' $CONF_FILE ||
+    sed -i '/\[mysql\]/a\prompt=\\\\u@\\\\h [\\\\d]>\\\\_' $CONF_FILE
+  echo "optimizing is done, restart mysql to effect"
+}
+
+install_mysql_on_ubuntu()
+{
+  if [ "$(dpkg -l | grep 'mysql-server-5.7')" = "" ]; then
+    # Install MySQL Server in a Non-Interactive mode. Default root password will be "root"
+    PWD=${1:-mysql}
+    echo "mysql-server-5.7 mysql-server/root_password password $PWD" | debconf-set-selections
+    echo "mysql-server-5.7 mysql-server/root_password_again password $PWD" | debconf-set-selections
+    apt-get install -y mysql-server-5.7
+    echo "mysql root password is $PWD"
+
+    optimize_mysql_configuration /etc/mysql/my.cnf
+    systemctl restart mysql
+  else
+    echo "mysql-server-5.7 already installed"
+  fi
 }
 
 install_mysql_on_centos()
 {
-  if [ ! $(yum repolist enabled | grep -q "mysql.*-community.*") ]; then
+  if [ "$(yum repolist enabled | grep 'mysql57-community')" = "" ]; then
     yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
   fi
 
-  if [ ! $(rpm -qa | grep -q "mysql-community-server") ]; then
+  if [ "$(rpm -qa | grep 'mysql-community-server')" = "" ]; then
     rm -f /var/log/mysqld.log
     yum install -y mysql-community-server
     systemctl restart mysqld
 
-    ## optimize mysql configuration
-    echo "optimizing mysql configuration..."
-    grep -q '^\[mysqld\]' /etc/my.cnf || printf '\n[mysqld]\n' >> /etc/my.cnf
-    grep -q '^validate_password=' /etc/my.cnf &&
-      sed -i 's/^validate_password=.*/validate_password=off/g' /etc/my.cnf ||
-      sed -i '/\[mysqld\]/a\validate_password=off' /etc/my.cnf
-    grep -q '^explicit_defaults_for_timestamp=' /etc/my.cnf ||
-      sed -i '/\[mysqld\]/a\explicit_defaults_for_timestamp=true' /etc/my.cnf
-    grep -q '^log-bin=' /etc/my.cnf || (
-      mkdir -p /var/log/mysql
-      chown -R mysql:mysql /var/log/mysql
-      sed -i '/\[mysqld\]/a\log-bin=/var/log/mysql/mysql-bin.log' /etc/my.cnf
-    )
-    grep -q '^max_binlog_size=' /etc/my.cnf ||
-      sed -i '/\[mysqld\]/a\max_binlog_size=100M' /etc/my.cnf
-    grep -q '^expire_logs_days=' /etc/my.cnf ||
-      sed -i '/\[mysqld\]/a\expire_logs_days=10' /etc/my.cnf
-    grep -q '^server-id=' /etc/my.cnf ||
-      sed -i '/\[mysqld\]/a\server-id=1' /etc/my.cnf
-    grep -q '^\[mysql\]' /etc/my.cnf || printf '\n[mysql]\n' >> /etc/my.cnf
-    grep -q '^prompt=' /etc/my.cnf ||
-      sed -i '/\[mysql\]/a\prompt=\\\\u@\\\\h [\\\\d]>\\\\_' /etc/my.cnf
+    optimize_mysql_configuration /etc/my.cnf
     systemctl restart mysqld
-    echo "optimizing is done"
 
     OLD_PWD=$(grep 'A temporary password' /var/log/mysqld.log | awk '{print $NF}')
     if [ -n $OLD_PWD ]; then

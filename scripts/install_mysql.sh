@@ -33,6 +33,17 @@ optimize_mysql_configuration()
 
 install_mysql_on_ubuntu()
 {
+  ## export DEBIAN_FRONTEND=noninteractive
+
+#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-server select mysql-5.7'
+#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-tools select '
+#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-preview select '
+#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-product select Ok'
+#wget http://dev.mysql.com/get/mysql-apt-config_0.7.2-1_all.deb
+#dpkg -i mysql-apt-config_0.7.2-1_all.deb
+#apt-get update
+#apt-get install -y mysql-server-5.7
+
   if [ "$(dpkg -l | grep 'mysql-server-5.7')" = "" ]; then
     # Install MySQL Server in a Non-Interactive mode. Default root password will be "root"
     PWD=${1:-mysql}

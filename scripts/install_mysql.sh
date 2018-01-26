@@ -39,8 +39,8 @@ install_mysql_on_ubuntu()
 #debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-tools select '
 #debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-preview select '
 #debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-product select Ok'
-#wget http://dev.mysql.com/get/mysql-apt-config_0.7.2-1_all.deb
-#dpkg -i mysql-apt-config_0.7.2-1_all.deb
+#wget https://dev.mysql.com/get/mysql-apt-config_0.8.9-1_all.deb
+#dpkg -i mysql-apt-config_0.8.9-1_all.deb
 #apt-get update
 #apt-get install -y mysql-server-5.7
 

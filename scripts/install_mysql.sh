@@ -16,7 +16,7 @@ optimize_mysql_configuration()
   grep -q '^explicit_defaults_for_timestamp=' $CONF_FILE ||
     sed -i '/\[mysqld\]/a\explicit_defaults_for_timestamp=true' $CONF_FILE
   grep -q '^log-bin=' $CONF_FILE || (
-    mkdir -p /var/log/mysql && chown -R mysql:mysql $CONF_FILE
+    mkdir -p /var/log/mysql && chown -R mysql:mysql /var/log/mysql
     sed -i '/\[mysqld\]/a\log-bin=/var/log/mysql/mysql-bin.log' $CONF_FILE
   )
   grep -q '^max_binlog_size=' $CONF_FILE ||
@@ -28,34 +28,32 @@ optimize_mysql_configuration()
   grep -q '^\[mysql\]' $CONF_FILE || printf '\n[mysql]\n' >> $CONF_FILE
   grep -q '^prompt=' $CONF_FILE ||
     sed -i '/\[mysql\]/a\prompt=\\\\u@\\\\h [\\\\d]>\\\\_' $CONF_FILE
-  echo "optimizing is done, restart mysql to effect"
+  echo "optimizing is done, restart mysql server to effect"
 }
 
 install_mysql_on_ubuntu()
 {
-  ## export DEBIAN_FRONTEND=noninteractive
+  if [ "$(dpkg -l | grep 'mysql-apt-config')" = "" ]; then
+    # install mysql apt repository
+    echo "mysql-apt-config mysql-apt-config/select-product select Ok" | debconf-set-selections
+    wget https://dev.mysql.com/get/mysql-apt-config_0.8.9-1_all.deb
+    DEBIAN_FRONTEND=noninteractive dpkg -i mysql-apt-config_0.8.9-1_all.deb
+    rm -f mysql-apt-config_0.8.9-1_all.deb
+  fi
 
-#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-server select mysql-5.7'
-#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-tools select '
-#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-preview select '
-#debconf-set-selections <<< 'mysql-apt-config mysql-apt-config/select-product select Ok'
-#wget https://dev.mysql.com/get/mysql-apt-config_0.8.9-1_all.deb
-#dpkg -i mysql-apt-config_0.8.9-1_all.deb
-#apt-get update
-#apt-get install -y mysql-server-5.7
-
-  if [ "$(dpkg -l | grep 'mysql-server-5.7')" = "" ]; then
-    # Install MySQL Server in a Non-Interactive mode. Default root password will be "root"
+  if [ "$(dpkg -l | grep 'mysql-community-server')" = "" ]; then
+    # install MySQL Server in a Non-Interactive mode. Default root password will be "mysql"
     PWD=${1:-mysql}
-    echo "mysql-server-5.7 mysql-server/root_password password $PWD" | debconf-set-selections
-    echo "mysql-server-5.7 mysql-server/root_password_again password $PWD" | debconf-set-selections
-    apt-get install -y mysql-server-5.7
+    echo "mysql-community-server mysql-community-server/root-pass password $PWD" | debconf-set-selections
+    echo "mysql-community-server mysql-community-server/re-root-pass password $PWD" | debconf-set-selections
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-community-server
     echo "mysql root password is $PWD"
 
     optimize_mysql_configuration /etc/mysql/my.cnf
-    systemctl restart mysql
+    systemctl restart mysql && echo "mysql server restarted"
   else
-    echo "mysql-server-5.7 already installed"
+    echo "mysql-community-server already installed"
   fi
 }
 
@@ -71,7 +69,7 @@ install_mysql_on_centos()
     systemctl restart mysqld
 
     optimize_mysql_configuration /etc/my.cnf
-    systemctl restart mysqld
+    systemctl restart mysqld && echo "mysql server restarted"
 
     OLD_PWD=$(grep 'A temporary password' /var/log/mysqld.log | awk '{print $NF}')
     if [ -n $OLD_PWD ]; then

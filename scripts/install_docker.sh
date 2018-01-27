@@ -19,7 +19,7 @@ setup_docker()
 
   ## set docker registry mirrors
   mkdir -p /etc/docker
-  tee > /etc/docker/daemon.json <<-EOF
+  tee /etc/docker/daemon.json <<-EOF
 {
   "registry-mirrors": [
     "https://registry.docker-cn.com"

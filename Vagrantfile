@@ -37,8 +37,6 @@ Vagrant.configure("2") do |config|
     SHELL
   end
 
-  config.vm.provision "shell", path: "scripts/install_docker.sh"
-  config.vm.provision "shell", path: "scripts/install_docker_compose.sh"
   config.vm.provision "shell", path: "scripts/install_oh_my_zsh.sh"
   config.vm.provision "shell", path: "scripts/convert_dos2unix.sh"
 

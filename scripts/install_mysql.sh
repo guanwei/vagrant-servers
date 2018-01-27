@@ -8,6 +8,9 @@ optimize_mysql_configuration()
   ## optimize mysql configuration
   echo "optimizing mysql configuration..."
   grep -q '^\[mysqld\]' $CONF_FILE || printf '\n[mysqld]\n' >> $CONF_FILE
+  grep -q '^bind-address=' $CONF_FILE &&
+    sed -i 's/^bind-address=.*/bind-address=0\.0\.0\.0/g' $CONF_FILE ||
+    sed -i '/\[mysqld\]/a\bind-address=0\.0\.0\.0' $CONF_FILE
   grep -q '^validate_password_policy=' $CONF_FILE &&
     sed -i 's/^validate_password_policy=.*/validate_password_policy=LOW/g' $CONF_FILE ||
     sed -i '/\[mysqld\]/a\validate_password_policy=LOW' $CONF_FILE

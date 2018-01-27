@@ -13,6 +13,10 @@ install_oh_my_zsh()
     sed -i 's/^DISABLE_UPDATE_PROMPT=.*/DISABLE_UPDATE_PROMPT=true/g' ~/.zshrc ||
     echo 'DISABLE_UPDATE_PROMPT=true' >> ~/.zshrc
 
+  ## install plugins
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+  git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
   ## install powerline fonts
   font_dir="$HOME/.local/share/fonts"
   if [ ! -d $font_dir ]; then
